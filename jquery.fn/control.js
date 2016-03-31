@@ -28,9 +28,8 @@
  gool 2015.5.19 */
 (function () {
     window.controls || (window.controls = {});
-
     var ready = false;
-    window.k_ready = false
+    
     $(function () {
         ready = true;
         $('[data-field],[data-control]').each(function () {
@@ -46,10 +45,6 @@
         });
     });
 
-    typeof KindEditor != 'undefined' && KindEditor.ready(function (K) {
-        k_ready = true;
-        window.K = K;
-    });
     //扩展jQuery 添加value属性
     Object.defineProperty($.fn, 'value', {
         get: function () {
