@@ -163,7 +163,7 @@
     };
 
     //获取当前model数据
-    window.setData = function () {
+    window.getData = function () {
         var data = typeof modelData == 'undefined' ? modelData = {} : modelData;
         $('[data-field]').each(function () {
             var $this = $(this);
@@ -171,36 +171,6 @@
         });
         return data;
     }
-
-    //提交当前model
-    window.postData = function (successCallback, errorCallback, validateCallback) {
-        if ($('[data-rule]').length > 0) {
-            var result = $.fn.validate();
-            if (!result.isValidate) {
-                if (validateCallback)
-                    validateCallback(result);
-                else
-                    DialogBox.alert("有未通过验证的输入项目");
-                return false;
-            }
-        }
-        var data = setData();
-        ARAPD("post", location.href, function (messageObj) {
-            try {
-                messageObj.obj = JSON.parse(messageObj.obj);
-            } catch (e) {
-
-            }
-            if (messageObj && messageObj.isSuccess && messageObj.obj && (messageObj.obj.IsSuccess || messageObj.obj.errcode == 0)) {
-                if (successCallback)
-                    successCallback(messageObj.obj);
-            } else {
-                if (errorCallback)
-                    errorCallback(messageObj.obj);
-            }
-        }, null, data);
-    };
-})()
 
 window.controls || (window.controls = {});
 
@@ -214,160 +184,5 @@ Object.defineProperty(controls.default.prototype, 'value', {
     },
     set: function (value) {
         this.$this.data('value', value);
-    }
-});
-
-//WdatePicker控件
-controls.datetime = function (el) {
-    this.$this = $(el);
-    this.$this.attr('onclick', "WdatePicker({dateFmt:'" + (this.$this.attr("data-format") ? this.$this.attr("data-format") : "yyyy/MM/dd HH:mm:ss") + "'})");
-
-};
-Object.defineProperty(controls.datetime.prototype, 'value', {
-    get: function () {
-        return this.$this.val();
-    },
-    set: function (value) {
-        this.$this.val(value.replace('T', ' '));
-    }
-});
-
-//单图控件，依赖kindeditor图片控件
-controls.singleImg = function (el) {
-    this.$this = $(el);
-    var genernateId = function (prefix) {
-        var rand = Math.floor(Math.random() * 100000);
-        if ($('#' + prefix + rand).length == 0)
-            return prefix + rand;
-        else
-            return genernateId(prefix);
-    }
-    var imgdiv_id = genernateId('imgdiv_id'), uploadiv_id = genernateId('uploadiv_id'), img_id = genernateId('img_id'), select_img = genernateId('select_img'), del_img_id = genernateId('del_img_id');
-    this.img_id = img_id;
-    this.imgdiv_id = imgdiv_id;
-    this.uploadiv_id = uploadiv_id;
-    var _this = this;
-    var html =
-        '<div class="mod-form__control" style="height: 100%;">'
-            + '<div class="mod-helper-imgupload" id="' + uploadiv_id + '" style="width: 100%; height: 100%;">'
-                + '<div class="icon">'
-                + '</div>'
-            + '</div>'
-            + '<div id="' + imgdiv_id + '" class="mod-helper-imguploaded ui-mr-medium" style="display: none;padding:0;margin:0;height:100%">'
-                    + '<img id="' + img_id + '" src="" alt=""  height="100%" width="100%">'
-                    + '<div id="' + select_img + '" class="edit">'
-                        + '<div class="center">'
-                            + '<span id="' + del_img_id + '" class="mod-icon mod-icon_del" title="编辑"></span>'
-                        + '</div>'
-                    + '</div>'
-                + '</div>'
-        + '</div>';
-    this.$this.html(html);
-    var handler = function (btnid, auurl, cbfun, imgview, remote) {
-        var editor = K.editor({
-            uploadJson: auurl,
-            allowFileManager: true,
-        });
-        K(btnid).click(function () {
-            editor.loadPlugin('image', function () {
-                editor.plugin.imageDialog({
-                    showRemote: remote != null && remote != undefined && remote != false,
-                    clickFn: function (url) {
-                        if (cbfun) {
-                            cbfun(url, imgview);
-                        }
-                        editor.hideDialog();
-                    }
-                });
-            });
-        });
-
-    }
-
-    if (k_ready) {
-        handler('#' + uploadiv_id, '/Utility/KindEditAu/Wsq', KAuCB,
-            {
-                src: '#' + img_id,
-                val: "#" + img_id,
-                upload: "#" + uploadiv_id,
-                div: "#" + imgdiv_id
-            });
-    } else {
-        KindEditor.ready(function (K) {
-            handler('#' + uploadiv_id, '/Utility/KindEditAu/Wsq', KAuCB,
-            {
-                src: '#' + img_id,
-                val: "#" + img_id,
-                upload: "#" + uploadiv_id,
-                div: "#" + imgdiv_id
-            })
-        });
-    }
-    function KAuCB(url, imgview) {
-        $(imgview.src).attr("src", url).css("display", "block");
-        $(imgview.val).val(url);
-        $(imgview.upload).css("display", "none");
-        $(imgview.div).css("display", "block");
-        _this.value = url;
-    }
-
-    $("#" + del_img_id).click(function () {
-        DialogBox.confirm({
-            content: '确定要删除图片？',
-            okFn: function () {
-                $("#" + img_id).attr("src", "");
-                $("#" + imgdiv_id).css("display", "none");
-                $("#" + uploadiv_id).css("display", "block");
-            }
-        });
-    });
-
-};
-Object.defineProperty(controls.singleImg.prototype, 'value', {
-    get: function () {
-        return $("#" + this.img_id).attr('src');
-    },
-    set: function (value) {
-        $("#" + this.img_id).attr('src', value);
-        if (value) {
-            $("#" + this.imgdiv_id).css("display", "block");
-            $("#" + this.uploadiv_id).css("display", "none");
-        }
-        this.$this.blur();
-    }
-});
-
-//微信卡卷颜色选择
-controls.wxCardColor = function (el) {
-    var $this = $(el), _this = this;
-    this.$this = $this;
-    this.inited = false;
-    ARAD('get', '/WeiXinCard/GetColors', function (data) {
-        _this.inited = true;
-        var colors = eval(data.obj), html = '';
-        $(colors).each(function () {
-            html += '<span class="c_b" style="background:' + this.value + '" name="' + this.name + '"></span>';
-        });
-        $this.html(html);
-        $this.find('span').click(function () {
-            $this.find('span').removeClass('selected');
-            $(this).addClass('selected');
-            $('#background_block').css("background", $(this).css("background"));
-        });
-        if (!_this._value)
-            $('.c_b').first().click()
-        else
-            _this.value = _this._value;
-    });
-}
-Object.defineProperty(controls.wxCardColor.prototype, 'value', {
-    get: function () {
-        return this.$this.find('.selected').attr('name');
-    },
-    set: function (value) {
-        if (this.inited)
-            this.$this.find('[name=' + value + ']').click();
-        else
-            this._value = value;
     }
 });
