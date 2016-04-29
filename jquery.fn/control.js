@@ -1,4 +1,4 @@
-﻿"use strict";
+"use strict";
 /*
     <div data-control="default" data-field="Name" data-init="initFunctionName" data-set="onSetValueFunctionName"></dvi>
     <script>
@@ -44,7 +44,14 @@
             }
         });
     });
-
+    $.fn.controlJson = function () {
+        var data = {};
+        $('[data-field]', this).each(function () {
+            var $this = $(this);
+            data[$this.attr('data-field')] = $this.value;
+        });
+        return data;
+    };
     //扩展jQuery 添加value属性
     Object.defineProperty($.fn, 'value', {
         get: function () {
@@ -159,7 +166,7 @@
 
     //获取当前model数据
     window.getData = function () {
-        var data = typeof modelData == 'undefined' ? modelData = {} : modelData;
+        var data = typeof modelData == 'undefined' ? window.modelData = {} : modelData;
         $('[data-field]').each(function () {
             var $this = $(this);
             data[$this.attr('data-field')] = $this.value;
@@ -167,17 +174,18 @@
         return data;
     }
 
-window.controls || (window.controls = {});
+    window.controls || (window.controls = {});
 
-//简单控件
-controls.default = function (el) {
-    this.$this = $(el);
-};
-Object.defineProperty(controls.default.prototype, 'value', {
-    get: function () {
-        return this.$this.data('value');
-    },
-    set: function (value) {
-        this.$this.data('value', value);
-    }
-});
+    //简单控件
+    controls.default = function (el) {
+        this.$this = $(el);
+    };
+    Object.defineProperty(controls.default.prototype, 'value', {
+        get: function () {
+            return this.$this.data('value');
+        },
+        set: function (value) {
+            this.$this.data('value', value);
+        }
+    });
+})()
