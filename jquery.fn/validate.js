@@ -84,7 +84,7 @@ HTML:
                         var el = this.element;
                         el.data('errorEl') && el.data('errorEl').remove();
                         el.data('errorEl', $(errorTemplate.replace(/\{msg\}/, this.message)));
-                        el.after(el.errorEl, el.data('errorEl'));
+                        el.after(el.data('errorEl'));
                         if (scrollTo !== false)
                             $(window).scrollTop(el.offset().top);
                     });
