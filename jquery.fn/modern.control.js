@@ -7,11 +7,13 @@ exports.control = function () {
         this.$this = $(el);
         this.init && this.init();
     };
-    controlBase.extend = function () {
+    controlBase.extend = function (proto) {
         var classe = function (el) {
             controlBase.call(this, el);
         }
         classe.prototype = new controlBase();
+        for(var k in proto)
+            classe.prototype[k] = proto[k];
         return classe;
     }
     controlBase.prototype = {
