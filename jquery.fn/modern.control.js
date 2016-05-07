@@ -45,6 +45,7 @@ exports.control = function () {
         },
         set: function (val) {
             this.setValueHandler(val);
+            this.$this.change();
         }
     });
     nativeControl.prototype.setRadioCheckBoxValue = function (val) {
