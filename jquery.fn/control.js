@@ -1,6 +1,6 @@
 "use strict";
 /*
-    <div data-control="default" data-field="Name" data-init="initFunctionName" data-set="onSetValueFunctionName"></dvi>
+    <div data-control="base" data-field="Name" data-init="initFunctionName" data-set="onSetValueFunctionName"></dvi>
     <script>
     function initFunctionName(){
         $(this).val('test');
@@ -10,8 +10,8 @@
         $(this).val(val);
     }
     
-    //$(x).value = xxx;
-    //console.log($(x).value);
+    //$(x).value(xxx);
+    //console.log($(x).value());
     
     //bind model
     bindData({Name:"join"});
@@ -48,27 +48,26 @@
         var data = {};
         $('[data-field]', this).each(function () {
             var $this = $(this);
-            data[$this.attr('data-field')] = $this.value;
+            data[$this.attr('data-field')] = $this.value();
         });
         return data;
     };
-    //扩展jQuery 添加value属性
-    Object.defineProperty($.fn, 'value', {
-        get: function () {
-            return this.data("control") ? this.data("control").value : nativeControl(this);
-        },
-        set: function (value) {
+
+    //扩展jQuery 添加value方法
+    $.fn.value = function (value) {
+        if (!arguments.length)
+            return this.data("control") ? this.data("control").value() : nativeControl(this);
+        else {
             var $this = $(this);
             if ($this.data("control")) {
-                $this.data("control").value = value;
+                $this.data("control").value(value);
             }
             else
                 nativeControl($this, value);
-
             if ($this.data('setEvent'))
                 $this.data('setEvent').call(this, value);
         }
-    });
+    }
 
     //html基础控件处理
     function nativeControl(el, setVal) {
@@ -126,7 +125,7 @@
 
             }
         else if (tag == 'select') {
-            if (typeof setVal != 'undefined')
+            if (typeof setVal != 'undefined') {
                 $this.find('option').each(function () {
                     if (this.value != setVal) {
                         this.selected = false;
@@ -137,6 +136,8 @@
                         $(this).attr('selected', 'selected');
                     }
                 });
+                $this.change();
+            }
         } else {
             if (typeof setVal != 'undefined')
                 $this.val(setVal);
@@ -144,17 +145,15 @@
         return val;
     }
 
+    var modelData;
     //为控件绑定数据
     window.dataBind = function (model) {
         var handler = function () {
             for (var k in model) {
                 var v = model[k];
-                if (typeof v != 'object')
-                    $('[data-field=' + k + ']').value = v;
-                else
-                    dataBind(v);
+                $('[data-field=' + k + ']').value(v);
             }
-            window.modelData = model;
+            modelData = model;
         }
         if (ready)
             handler();
@@ -166,10 +165,10 @@
 
     //获取当前model数据
     window.getData = function () {
-        var data = typeof modelData == 'undefined' ? window.modelData = {} : modelData;
+        var data = typeof modelData == 'undefined' ? modelData = {} : modelData;
         $('[data-field]').each(function () {
             var $this = $(this);
-            data[$this.attr('data-field')] = $this.value;
+            data[$this.attr('data-field')] = $this.value();
         });
         return data;
     }
@@ -177,15 +176,15 @@
     window.controls || (window.controls = {});
 
     //简单控件
-    controls.default = function (el) {
+    controls.base = function (el) {
         this.$this = $(el);
     };
-    Object.defineProperty(controls.default.prototype, 'value', {
-        get: function () {
-            return this.$this.data('value');
-        },
-        set: function (value) {
-            this.$this.data('value', value);
+    controls.base.prototype = {
+        value: function (val) {
+            if (!arguments.length)
+                return this.$this.data('value');
+            else
+                this.$this.data('value', value);
         }
-    });
+    };
 })()
