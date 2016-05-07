@@ -11,18 +11,27 @@ return { isValidate : bool,
 HTML:
  <form>
     Enter:
-    <input type="password" data-rule="required;number;equals(target)"/>
+    <input type="password" data-rule="密码:required;number;equals(target)"/>
     <input type="password" id="target"/>
  </form>
- 2015.3.16 gool */
+ 2016.5.7 gool */
 "use strict";
 (function () {
+    if (!String.prototype.trim) {
+        String.prototype.trim = function () {
+            return this.replace(/(^\s*)|(\s*$)/g, "");
+        }
+    }
+    window.errorTemplate = '<div class="error_msg">{msg}</div>';
     //简单的检查是否通过验证,返回true/false
-    $.fn.isValidate = function () {
-        return this.validate.call(this, true, false).isValidate;
+    $.fn.isValidate = function (callback) {
+        var result = this.validate.call(this, true, false).isValidate;
+        if (callback)
+            callback();
+        return result;
     }
 
-    //justTest 是否只是测试,默认 是
+    //justTest 是否只是测试,默认 否
     //scrollTo 是否滚动到错误处,默认 是
     //validateHandler 错误处理函数, justTest=true 有默认值
     $.fn.validate = function (justTest, scrollTo, validateHandler) {
@@ -44,8 +53,10 @@ HTML:
         $(this).each(function () {
             var $this = $(this);
             //获取到控件值,$this.val()需要其他组件
-            var val = $this.value || $this.val(),
+            var val = $this.value && $this.value() || $this.val(),
                 rule = $this.attr('data-rule'), //data-rule内容
+                match = /^([^;:]+?):/.exec(rule),
+                displayName = match ? match[1] : '',
                 rs = getRules(rule); //解析成rule列表
             for (var k in rs) {
                 var i = rs[k];
@@ -56,7 +67,8 @@ HTML:
                     (rules[i].action ? rules[i].action($this, rule, val) : true) //自定义action验证
                     ) {
                     rtv.isValidate = false;
-                    rtv.messages.push({ element: $this, message: rules[i].message }); //设置验证失败信息
+                    var msg = typeof rules[i].message == 'string' ? formatMsg(rules[i].message, displayName) : rules[i].message(displayName)
+                    rtv.messages.push({ element: $this, message: msg }); //设置验证失败信息
                 }
             }
         });
@@ -64,21 +76,23 @@ HTML:
 
         //默认的验证结果处理
         if (justTest !== true && !validateHandler)
-            validateHandler = function (msg) {
+            validateHandler = function (msg, scrollTo) {
                 if (msg.isValidate)
-                    $(this).parent().find('.error_msg').remove();
+                    $(this).data('errorEl') && $(this).data('errorEl').remove();
                 else
                     $(msg.messages).each(function () {
                         var el = this.element;
-                        $('.error_msg', el.parent()).remove();
-                        el.after('<div class="error_msg">' + this.message + '</div>');
+                        el.data('errorEl') && el.data('errorEl').remove();
+                        el.data('errorEl', $(errorTemplate.replace(/\{msg\}/, this.message)));
+                        el.after(el.errorEl, el.data('errorEl'));
                         if (scrollTo !== false)
                             $(window).scrollTop(el.offset().top);
                     });
             }
 
+        //通过window.validateHandler可以自定义验证高亮等处理
         if (validateHandler)
-            validateHandler.call(this, rtv);
+            validateHandler.call(this, rtv, scrollTo);
         return rtv;
     }
 
@@ -103,15 +117,22 @@ HTML:
         return s;
     }
 
+    function formatMsg(msg, name) {
+        if (/\{name\}/.test(msg))
+            return /\{name\}/.test(msg) ? msg.replace(/\{name\}/, name) : name + msg;
+        else
+            return name + msg;
+    }
+
     //验证规则 number,required,datetime,phone是正则规则 其他的是自定义action验证
     var rules = {
-        number : { rule: /^\d{0,}$/, message: '必须是一个整数' },
+        number: { rule: /^(-?\+?\d){0,}$/, message: '必须是一个整数' },
 
-        required : { rule: /.+/, message: '不能为空' },
+        required: { rule: /.+/, message: '不能为空' },
 
-        datetime : { rule: /^(\d{4}\/\d{1,2}\/\d{1,2}\s+\d{1,2}:\d{1,2}:\d{1,2})?$/, message: '不是有效的日期格式' },
+        datetime: { rule: /^(\d{4}\/\d{1,2}\/\d{1,2}\s+\d{1,2}:\d{1,2}:\d{1,2})?$/, message: '不是有效的日期格式' },
 
-        phone: { rule: /^(13[0-9]|14[0-9]|15[0-9]|18[0-9])\d{8}$/i, message: '不是有效的手机号码' },
+        mobile: { rule: /^(13[0-9]|14[0-9]|15[0-9]|18[0-9])\d{8}$/i, message: '不是有效的号码格式' },
 
         length: {
             last: 0,//保存起来的data-rule中的参数值
@@ -129,8 +150,8 @@ HTML:
                 } catch (e) {
                     console.error('length rule error!');
                 }
-            }, get message() {
-                return '长度必须为' + rules.length.last;
+            }, message: function (name) {
+                return name + '长度必须为' + rules.length.last;
             }
         },
 
@@ -146,12 +167,12 @@ HTML:
                         el.data("min", length);
                     }
                     rules.min.last = length;
-                    return val < length;
+                    return parseFloat(val) < length;
                 } catch (e) {
                     console.error('min rule error!');
                 }
-            }, get message() {
-                return '不能小于' + rules.min.last;
+            }, message: function (name) {
+                return name + '不能小于' + rules.min.last;
             }
         },
         max: {
@@ -166,12 +187,12 @@ HTML:
                         el.data("max", length);
                     }
                     rules.max.last = length;
-                    return val > length;
+                    return parseFloat(val) > length;
                 } catch (e) {
                     console.error('max rule error!');
                 }
-            }, get message() {
-                return '不能大于' + rules.max.last;
+            }, message: function (name) {
+                return name + '不能大于' + rules.max.last;
             }
         },
         equals: {
@@ -197,8 +218,8 @@ HTML:
                 } catch (e) {
                     console.error('maxLength rule error!');
                 }
-            }, get message() {
-                return '长度不能大于' + rules.maxLength.lastLength;
+            }, message: function (name) {
+                return name + '长度不能大于' + rules.maxLength.lastLength;
             }
         }, minLength: {
             lastLength: 0,//保存起来的data-rule中的参数值
@@ -214,8 +235,8 @@ HTML:
                 } catch (e) {
                     console.error('minLength rule error!');
                 }
-            }, get message() {
-                return '长度不能小于' + rules.minLength.lastLength;
+            }, message: function (name) {
+                return name + '长度不能小于' + rules.minLength.lastLength;
             }
         }
     };
