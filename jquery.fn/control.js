@@ -25,11 +25,11 @@
         });
     });
     </script>
- gool 2016.5.7 */
+ gool 2015.5.19 */
 (function () {
     window.controls || (window.controls = {});
     var ready = false;
-    
+
     $(function () {
         ready = true;
         $('[data-field],[data-control]').each(function () {
@@ -55,97 +55,28 @@
 
     //扩展jQuery 添加value方法
     $.fn.value = function (value) {
+        var $this = $(this), control = this.data("control");
+        if (!control) {
+            control = new nativeControl(this);
+            this.data("control", control);
+        }
         if (!arguments.length)
-            return this.data("control") ? this.data("control").value() : nativeControl(this);
+            return control.value ? control.value() : control.getValue();
         else {
-            var $this = $(this);
-            if ($this.data("control")) {
-                $this.data("control").value(value);
-            }
-            else
-                nativeControl($this, value);
+            control.value ? control.value(value) : control.setValue(value);
             if ($this.data('setEvent'))
                 $this.data('setEvent').call(this, value);
         }
     }
 
-    //html基础控件处理
-    function nativeControl(el, setVal) {
-        var $this = $(el);
-
-        if ($this.length == 0)
-            return;
-        var tag = $this.get(0).tagName.toLowerCase(), type = $this.attr('type'),
-            val = $this.val(), name = $this.attr('name'), valArr = typeof setVal == 'string' ? setVal.split(',') : [setVal];
-
-        if (tag == 'input')
-            switch (type) {
-                case 'radio':
-                case 'checkbox':
-                    if (setVal === true)
-                        valArr = ['True'];
-                    else if (setVal === false)
-                        valArr = ['False'];
-                    var radios = $(':' + type + '[name=' + name + ']');
-                    if (typeof setVal != 'undefined') {
-                        if (radios.length <= 1) {
-                            if (setVal) {
-                                el[0].checked = true;
-                                el.attr('checked', 'checked');
-                            } else {
-                                el[0].checked = false;
-                                el.removeAttr('checked');
-                            }
-                        }
-                        $(radios).each(function () {
-                            var radio = this;
-                            radio.checked = false;
-                            $(radio).removeAttr('checked');
-                            $(valArr).each(function () {
-                                if (this == radio.value) {
-                                    radio.checked = true;
-                                    $(radio).attr('checked', 'checked');
-                                }
-                            });
-                        });
-                    } else {
-                        val = '';
-                        if (radios.length <= 1)
-                            return el[0].checked;
-                        $(radios).each(function () {
-                            if (this.checked)
-                                val += this.value + ',';
-                        });
-                        val = val.replace(/,$/, '');
-                    }
-                    break;
-                default:
-                    if (typeof setVal != 'undefined')
-                        $this.val(setVal);
-
-            }
-        else if (tag == 'select') {
-            if (typeof setVal != 'undefined') {
-                $this.find('option').each(function () {
-                    if (this.value != setVal) {
-                        this.selected = false;
-                        $(this).removeAttr('selected');
-                    }
-                    else {
-                        this.selected = true;
-                        $(this).attr('selected', 'selected');
-                    }
-                });
-                $this.change();
-            }
-        } else {
-            if (typeof setVal != 'undefined')
-                $this.val(setVal);
-        }
-        return val;
+    //扩展jQuery 添加control方法
+    $.control = $.fn.control = function () {
+        return $(this).data("control");
     }
 
     var modelData;
+    $.control.modelData = modelData;
+
     //为控件绑定数据
     window.dataBind = function (model) {
         var handler = function () {
@@ -175,16 +106,111 @@
 
     window.controls || (window.controls = {});
 
-    //简单控件
-    controls.base = function (el) {
+    //控件父类
+    var controlBase = function (el) {
         this.$this = $(el);
+        this.init();
     };
-    controls.base.prototype = {
-        value: function (val) {
-            if (!arguments.length)
-                return this.$this.data('value');
-            else
-                this.$this.data('value', value);
+    controlBase.extend = function (proto) {
+        var classe = function (el) {
+            controlBase.call(this, el);
         }
-    };
+        classe.prototype = new controlBase();
+        for (var k in proto)
+            classe.prototype[k] = proto[k];
+        return classe;
+    }
+    controlBase.prototype = {
+        getValue: $.noop,
+        setValue: $.noop,
+        init: $.noop
+    }
+    controls.controlBase = controlBase;
+
+    ///原生控件处理
+    var nativeControl = controlBase.extend({
+        init: function () {
+            var tag = this.$this.get(0).tagName.toLowerCase();
+            var type = this.type = this.$this.attr('type');
+            if (tag == 'input')
+                switch (type) {
+                    case 'radio':
+                    case 'checkbox':
+                        this.setValueHandler = this.setRadioCheckBoxValue;
+                        this.getValueHandler = this.getRadioCheckBoxValue;
+                }
+            else if (tag == 'select') {
+                this.setValueHandler = this.setSelectValue;
+                this.getValueHandler = this.getSelectValue;
+            }
+        },
+        getValue: function () {
+            return this.getValueHandler();
+        },
+        setValue: function (val) {
+            this.setValueHandler(val);
+            this.$this.change();
+        },
+        setRadioCheckBoxValue: function (val) {
+            var valArr = typeof val == 'string' ? val.split(',') : [val];
+            var name = this.$this.attr('name');
+            var radios = $(':' + this.type + '[name=' + name + ']');
+
+            if (val === true)
+                valArr = ['True'];
+            else if (val === false)
+                valArr = ['False'];
+
+            if (typeof val != 'undefined') {
+                if (radios.length <= 1) {
+                    if (val) {
+                        this.$this[0].checked = true;
+                        this.$this.attr('checked', 'checked');
+                    } else {
+                        this.$this[0].checked = false;
+                        this.$this.removeAttr('checked');
+                    }
+                }
+                $(radios).each(function () {
+                    var radio = this;
+                    radio.checked = false;
+                    $(radio).removeAttr('checked');
+                    $(valArr).each(function () {
+                        if (this == radio.value) {
+                            radio.checked = true;
+                            $(radio).attr('checked', 'checked');
+                        }
+                    });
+                });
+            }
+        },
+        getRadioCheckBoxValue: function () {
+            var name = this.$this.attr('name'), radios = $(':' + this.type + '[name=' + name + ']'), val = '';
+            if (radios.length <= 1)
+                return this.$this[0].checked;
+            $(radios).each(function () {
+                if (this.checked)
+                    val += this.value + ',';
+            });
+            return val.replace(/,$/, '');
+        },
+        setSelectValue: function (val) {
+            this.$this.find('option').each(function () {
+                if (this.value != val) {
+                    this.selected = false;
+                    $(this).removeAttr('selected');
+                }
+                else {
+                    this.selected = true;
+                    $(this).attr('selected', 'selected');
+                }
+            });
+        },
+        getSelectValue: function () {
+            return this.$this.val();
+        },
+        getValueHandler: $.noop,
+        setValueHandler: $.noop
+    });
+    controls.nativeControl = nativeControl;
 })()
