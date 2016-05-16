@@ -124,7 +124,7 @@ HTML:
             return name + msg;
     }
 
-    //验证规则 number,required,datetime,phone是正则规则 其他的是自定义action验证
+    //验证规则 number,required,datetime,mobile是正则规则 其他的是自定义action验证
     var rules = {
         number: { rule: /^(-?\+?\d){0,}$/, message: '必须是一个整数' },
 
@@ -241,4 +241,5 @@ HTML:
         }
     };
     $.fn.validate.rules = rules;
+    $.validate = $.fn;
 })()
