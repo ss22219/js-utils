@@ -9,7 +9,7 @@ return { isValidate : bool,
                       }]
       }
 HTML:
- <form>
+ <form data-validate>
     Enter:
     <input type="password" data-rule="密码:required;number;equals(target)"/>
     <input type="password" id="target"/>
@@ -175,4 +175,7 @@ HTML:
     $.fn.validate.rules = rules;
     $.validate = $.fn.validate;
     $.validate.errorTemplate = '<div class="error_msg">{msg}</div>';
+    $('[data-validate] [data-rule]').blur(function(){
+         $(this).validate();
+    });
 })()
