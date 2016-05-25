@@ -1,31 +1,5 @@
 "use strict";
-/*
-    <div data-control="base" data-field="Name" data-init="initFunctionName" data-set="onSetValueFunctionName"></dvi>
-    <script>
-    function initFunctionName(){
-        $(this).val('test');
-    }
-
-    function onSetValueFunctionName(val){
-        $(this).val(val);
-    }
-    
-    //$(x).value(xxx);
-    //console.log($(x).value());
-    
-    //bind model
-    bindData({Name:"join"});
-    
-    //post
-    $(x).click(function(){
-        postData(function(){ //validate form
-            alert('success!');
-        },function(){
-            alert('error');
-        });
-    });
-    </script>
- gool 2015.5.19 */
+/*gool 2015.5.19*/
 (function () {
     window.controls || (window.controls = {});
     var ready = false;
