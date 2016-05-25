@@ -22,7 +22,6 @@ HTML:
             return this.replace(/(^\s*)|(\s*$)/g, "");
         }
     }
-    window.errorTemplate = '<div class="error_msg">{msg}</div>';
     //简单的检查是否通过验证,返回true/false
     $.fn.isValidate = function (callback) {
         var result = this.validate.call(this, true, false).isValidate;
@@ -84,7 +83,7 @@ HTML:
                     $(msg.messages).each(function () {
                         var el = this.element;
                         el.data('errorEl') && el.data('errorEl').remove();
-                        el.data('errorEl', $(errorTemplate.replace(/\{msg\}/, this.message)));
+                        el.data('errorEl', $($.validate.errorTemplate.replace(/\{msg\}/, this.message)));
                         el.after(el.data('errorEl'));
                         if (scrollTo !== false)
                             $(window).scrollTop(el.offset().top);
@@ -174,5 +173,6 @@ HTML:
         }
     };
     $.fn.validate.rules = rules;
-    $.validate = $.fn;
+    $.validate = $.fn.validate;
+    $.validate.errorTemplate = '<div class="error_msg">{msg}</div>';
 })()
