@@ -14,7 +14,7 @@ HTML:
     <input type="password" data-rule="密码:required;number;equals(target)"/>
     <input type="password" id="target"/>
  </form>
- 2016.5.7 gool */
+ 2016.5.25 gool */
 "use strict";
 (function () {
     if (!String.prototype.trim) {
@@ -59,15 +59,16 @@ HTML:
                 displayName = match ? match[1] : '',
                 rs = getRules(rule); //解析成rule列表
             for (var k in rs) {
-                var i = rs[k];
+                var i = rs[k], arg = getArg(i, rule);
+
                 //对当前规则判断,如果包含正则表达式属性,使用正则验证,否则使用自定义action验证
                 if (rules[i] &&
                     (rules[i].rule ? !rules[i].rule.test(val) : true) //正则验证
                     &&
-                    (rules[i].action ? rules[i].action($this, rule, val) : true) //自定义action验证
+                    (rules[i].action ? rules[i].action($this, rule, val, arg) : true) //自定义action验证
                     ) {
                     rtv.isValidate = false;
-                    var msg = typeof rules[i].message == 'string' ? formatMsg(rules[i].message, displayName) : rules[i].message(displayName)
+                    var msg = typeof rules[i].message == 'string' ? formatMsg(rules[i].message, displayName, arg) : rules[i].message(displayName, arg)
                     rtv.messages.push({ element: $this, message: msg }); //设置验证失败信息
                 }
             }
@@ -99,7 +100,7 @@ HTML:
     //getArg('number;length(18)','length') -> 18 现在只支持一个参数
     function getArg(name, rule) {
         var reg = new RegExp(name + '\\s?\\(\\s?(.+?)\\s?\\)');
-        return reg.exec(rule)[1];
+        return reg.test(rule) ? reg.exec(rule)[1] : null;
     }
 
     //解析data-rule信息
@@ -117,127 +118,59 @@ HTML:
         return s;
     }
 
-    function formatMsg(msg, name) {
+    //解析message
+    function formatMsg(msg, name, arg) {
         if (/\{name\}/.test(msg))
-            return /\{name\}/.test(msg) ? msg.replace(/\{name\}/, name) : name + msg;
+            msg = /\{name\}/.test(msg) ? msg.replace(/\{name\}/, name) : name + msg;
         else
-            return name + msg;
+            msg = name + msg;
+        msg = msg.replace(/\{arg\}/, arg)
+        return msg;
     }
 
     //验证规则 number,required,datetime,mobile是正则规则 其他的是自定义action验证
     var rules = {
         number: { rule: /^(-?\+?\d){0,}$/, message: '必须是一个整数' },
-
         required: { rule: /.+/, message: '不能为空' },
-
         datetime: { rule: /^(\d{4}\/\d{1,2}\/\d{1,2}\s+\d{1,2}:\d{1,2}:\d{1,2})?$/, message: '不是有效的日期格式' },
-
         mobile: { rule: /^(13[0-9]|14[0-9]|15[0-9]|18[0-9])\d{8}$/i, message: '不是有效的号码格式' },
-
         length: {
-            last: 0,//保存起来的data-rule中的参数值
-            action: function (el, rule, val) {
-                if (val === null || typeof val == 'undefined' || val === '')
-                    return;
-                try {
-                    var length = el.data("length");
-                    if (!length) {
-                        length = getArg('length', rule); //获取规则参数 length(18) -> 18
-                        el.data("length", length);
-                    }
-                    rules.length.last = length;
-                    return val.length != length;
-                } catch (e) {
-                    console.error('length rule error!');
-                }
-            }, message: function (name) {
-                return name + '长度必须为' + rules.length.last;
-            }
+            action: function (el, rule, val, length) {
+                if (val === null || val === void 0)
+                    return true;
+                return val.length != length;
+            }, message: name + '长度必须为{arg}'
         },
-
         min: {
-            last: 0,//保存起来的data-rule中的参数值
-            action: function (el, rule, val) {
-                if (val === null || typeof val == 'undefined' || val === '')
+            action: function (el, rule, val, length) {
+                if (val === null || val === void 0)
                     return;
-                try {
-                    var length = el.data("min");
-                    if (!length) {
-                        length = getArg('min', rule);
-                        el.data("min", length);
-                    }
-                    rules.min.last = length;
-                    return parseFloat(val) < length;
-                } catch (e) {
-                    console.error('min rule error!');
-                }
-            }, message: function (name) {
-                return name + '不能小于' + rules.min.last;
-            }
+                return parseFloat(val) < length;
+            }, message: '不能小于{arg}'
         },
         max: {
-            last: 0,//保存起来的data-rule中的参数值
-            action: function (el, rule, val) {
-                if (val === null || typeof val == 'undefined' || val === '')
-                    return;
-                try {
-                    var length = el.data("max");
-                    if (!length) {
-                        length = getArg('max', rule);
-                        el.data("max", length);
-                    }
-                    rules.max.last = length;
-                    return parseFloat(val) > length;
-                } catch (e) {
-                    console.error('max rule error!');
-                }
-            }, message: function (name) {
-                return name + '不能大于' + rules.max.last;
-            }
+            action: function (el, rule, val, length) {
+                if (val === null || val === void 0)
+                    return false;
+                return parseFloat(val) > length;
+            }, message: '不能大于{arg}'
         },
         equals: {
-            action: function (el, rule, val) {
-                try {
-                    var target = getArg('equals', rule);
-                    return val !== $('#' + target).val();
-                } catch (e) {
-                    console.error('validate equals rule error!');
-                }
+            action: function (el, rule, val, target) {
+                return val !== $('#' + target).val();
             }, message: '两次输入的值不一致'
         }, maxLength: {
-            lastLength: 0,//保存起来的data-rule中的参数值
-            action: function (el, rule, val) {
-                try {
-                    var length = el.data("maxLength");
-                    if (!length) {
-                        length = getArg('maxLength', rule);
-                        el.data("maxLength", length);
-                    }
-                    rules.maxLength.lastLength = length;
-                    return val.length > length;
-                } catch (e) {
-                    console.error('maxLength rule error!');
-                }
-            }, message: function (name) {
-                return name + '长度不能大于' + rules.maxLength.lastLength;
-            }
+            action: function (el, rule, val, length) {
+                if (val === null || val === void 0)
+                    return false;
+                return val.length > length;
+            }, message: '长度不能大于{arg}'
         }, minLength: {
-            lastLength: 0,//保存起来的data-rule中的参数值
-            action: function (el, rule, val) {
-                try {
-                    var length = el.data("minLength");
-                    if (!length) {
-                        length = getArg('minLength', rule);
-                        el.data("minLength", length);
-                    }
-                    rules.minLength.lastLength = length;
-                    return val.length < length;
-                } catch (e) {
-                    console.error('minLength rule error!');
-                }
-            }, message: function (name) {
-                return name + '长度不能小于' + rules.minLength.lastLength;
-            }
+            action: function (el, rule, val, length) {
+                if (val === null || val === void 0)
+                    return true;
+                return val.length < length;
+            }, message: '长度不能小于{arg}'
         }
     };
     $.fn.validate.rules = rules;
