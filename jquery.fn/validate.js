@@ -185,7 +185,9 @@ HTML:
     $.fn.validate.rules = rules;
     $.validate = $.fn.validate;
     $.validate.errorTemplate = '<div class="error_msg">{msg}</div>';
-    $('[data-validate] [data-rule]').blur(function(){
-         $(this).validate();
+    $(function(){
+        $('[data-validate] [data-rule]').blur(function(){
+            $(this).validate();
+         });
     });
-})()
+})();
