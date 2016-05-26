@@ -11,7 +11,7 @@ return { isValidate : bool,
 HTML:
  <form data-validate>
     Enter:
-    <input type="password" data-rule="密码:required;number;equals(target)"/>
+    <input type="password" data-rule="密码:required;number[请输入一个整数];equals(target)"/>
     <input type="password" id="target"/>
  </form>
  2016.5.25 gool */
@@ -67,7 +67,11 @@ HTML:
                     (rules[i].action ? rules[i].action($this, rule, val, arg) : true) //自定义action验证
                     ) {
                     rtv.isValidate = false;
-                    var msg = typeof rules[i].message == 'string' ? formatMsg(rules[i].message, displayName, arg) : rules[i].message(displayName, arg)
+                    var msg = getCustomMessage(i, rule);
+                    if(!msg)
+                        msg = typeof rules[i].message == 'string' ? formatMsg(rules[i].message, displayName, arg) : rules[i].message(displayName, arg)
+                    else
+                        msg = formatMsg(msg, displayName, arg)
                     rtv.messages.push({ element: $this, message: msg }); //设置验证失败信息
                 }
             }
@@ -95,13 +99,6 @@ HTML:
             validateHandler.call(this, rtv, scrollTo);
         return rtv;
     }
-
-    //getArg('number;length(18)','length') -> 18 现在只支持一个参数
-    function getArg(name, rule) {
-        var reg = new RegExp(name + '\\s?\\(\\s?(.+?)\\s?\\)');
-        return reg.test(rule) ? reg.exec(rule)[1] : null;
-    }
-
     //解析data-rule信息
     function getRules(rule) {
         if (!rule)
@@ -117,13 +114,26 @@ HTML:
         return s;
     }
 
+    //getArg('length','number;length(18)') -> 18 现在只支持一个参数
+    function getArg(name, rule) {
+        var reg = new RegExp(name + '\\s{0,}\\(\\s{0,}(.+?)\\s{0,}\\)');
+        return reg.test(rule) ? reg.exec(rule)[1] : null;
+    }
+    
+    //getCustomMessage('length','number;length(18)[length must be 18]') -> length must be 18
+    function getCustomMessage(name, rule){
+        var reg = new RegExp(name + '(\\s{0,}\\(\\s{0,}.+?\\s{0,}\\))?\\[(.+?)\\]');
+        return reg.test(rule) ? reg.exec(rule)[2] : '';
+    }
+
     //解析message
     function formatMsg(msg, name, arg) {
+        arg = arg || '';
         if (/\{name\}/.test(msg))
-            msg = /\{name\}/.test(msg) ? msg.replace(/\{name\}/, name) : name + msg;
+            msg = /\{name\}/.test(msg) ? msg.replace(/\{name\}/g, name) : name + msg;
         else
             msg = name + msg;
-        msg = msg.replace(/\{arg\}/, arg)
+        msg = msg.replace(/\{arg\}/g, arg)
         return msg;
     }
 
