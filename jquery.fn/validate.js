@@ -24,10 +24,10 @@ HTML:
     }
     //简单的检查是否通过验证,返回true/false
     $.fn.isValidate = function (callback) {
-        var result = this.validate.call(this, true, false).isValidate;
+        var result = this.validate.call(this, true, false);
         if (callback)
-            callback();
-        return result;
+            callback(result);
+        return result.isValidate;
     }
 
     //justTest 是否只是测试,默认 否
