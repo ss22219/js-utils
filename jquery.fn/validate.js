@@ -80,19 +80,7 @@ HTML:
 
         //默认的验证结果处理
         if (justTest !== true && !validateHandler)
-            validateHandler = function (msg, scrollTo) {
-                if (msg.isValidate)
-                    $(this).data('errorEl') && $(this).data('errorEl').remove();
-                else
-                    $(msg.messages).each(function () {
-                        var el = this.element;
-                        el.data('errorEl') && el.data('errorEl').remove();
-                        el.data('errorEl', $($.validate.errorTemplate.replace(/\{msg\}/, this.message)));
-                        el.after(el.data('errorEl'));
-                        if (scrollTo !== false)
-                            $(window).scrollTop(el.offset().top);
-                    });
-            }
+            validateHandler = window.validateHandler || $.validate.validateHandler;
 
         //通过window.validateHandler可以自定义验证高亮等处理
         if (validateHandler)
@@ -185,6 +173,19 @@ HTML:
     $.fn.validate.rules = rules;
     $.validate = $.fn.validate;
     $.validate.errorTemplate = '<div class="error_msg">{msg}</div>';
+    $.validate.validateHandler = function (msg, scrollTo) {
+                if (msg.isValidate)
+                    $(this).data('errorEl') && $(this).data('errorEl').remove();
+                else
+                    $(msg.messages).each(function () {
+                        var el = this.element;
+                        el.data('errorEl') && el.data('errorEl').remove();
+                        el.data('errorEl', $($.validate.errorTemplate.replace(/\{msg\}/, this.message)));
+                        el.after(el.data('errorEl'));
+                        if (scrollTo !== false)
+                            $(window).scrollTop(el.offset().top);
+                    });
+            };
     $(function(){
         $('[data-validate] [data-rule]').blur(function(){
             $(this).validate();
