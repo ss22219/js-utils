@@ -74,7 +74,8 @@ $.validate.rules.myActionRule = {
                     (rules[i].rule ? !rules[i].rule.test(val) : true) //正则验证
                     &&
                     (rules[i].action ? !rules[i].action($this, rule, val, arg) : true) //自定义action验证
-                    ) {
+                    )
+                {
                     rtv.isValidate = false;
                     var msg = getCustomMessage(i, rule);
                     if (!msg)
