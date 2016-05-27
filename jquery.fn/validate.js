@@ -82,7 +82,7 @@ HTML:
         if (justTest !== true && !validateHandler)
             validateHandler = window.validateHandler || $.validate.validateHandler;
 
-        //通过window.validateHandler可以自定义验证高亮等处理
+        //通过window.validateHandler 或者 $.validate.validateHandler 可以自定义验证高亮等处理
         if (validateHandler)
             validateHandler.call(this, rtv, scrollTo);
         return rtv;
