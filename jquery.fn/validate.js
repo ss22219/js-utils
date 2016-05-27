@@ -1,20 +1,29 @@
 /*
-$('form').validate(justTest,scrollTo) -> 
-param: justTest bool 只是检查，不修改Dom
-param: scrollTo bool 滚动到错误元素
-return { isValidate : bool,
-         messages:[{
-                      element:jQueryEl,
-                      message:string
-                      }]
-      }
 HTML:
  <form data-validate>
     Enter:
     <input type="password" data-rule="密码:required;number[请输入一个整数];equals(target)"/>
     <input type="password" id="target"/>
  </form>
- 2016.5.25 gool */
+
+ Script:
+$('form').validate(justTest,scrollTo) -> 
+    param: justTest bool 只是检查，不修改Dom
+    param: scrollTo bool 滚动到错误元素
+
+    return { isValidate : bool,
+             messages:[{
+                          element:jQueryEl,
+                          message:string
+                          }]
+          }
+$.validate.rules.myRule = { rule: /.+?/, message: '{name}{arg}'}
+$.validate.rules.myActionRule = { 
+                action: function(el, rule, val, arg){ 
+                },
+                message: function(name,arg){
+                }}
+*/
 "use strict";
 (function () {
     if (!String.prototype.trim) {
@@ -68,7 +77,7 @@ HTML:
                     ) {
                     rtv.isValidate = false;
                     var msg = getCustomMessage(i, rule);
-                    if(!msg)
+                    if (!msg)
                         msg = typeof rules[i].message == 'string' ? formatMsg(rules[i].message, displayName, arg) : rules[i].message(displayName, arg)
                     else
                         msg = formatMsg(msg, displayName, arg)
@@ -107,9 +116,9 @@ HTML:
         var reg = new RegExp(name + '\\s{0,}\\(\\s{0,}(.+?)\\s{0,}\\)');
         return reg.test(rule) ? reg.exec(rule)[1] : null;
     }
-    
+
     //getCustomMessage('length','number;length(18)[length must be 18]') -> length must be 18
-    function getCustomMessage(name, rule){
+    function getCustomMessage(name, rule) {
         var reg = new RegExp(name + '(\\s{0,}\\(\\s{0,}.+?\\s{0,}\\))?\\[(.+?)\\]');
         return reg.test(rule) ? reg.exec(rule)[2] : '';
     }
@@ -174,21 +183,21 @@ HTML:
     $.validate = $.fn.validate;
     $.validate.errorTemplate = '<div class="error_msg">{msg}</div>';
     $.validate.validateHandler = function (msg, scrollTo) {
-                if (msg.isValidate)
-                    $(this).data('errorEl') && $(this).data('errorEl').remove();
-                else
-                    $(msg.messages).each(function () {
-                        var el = this.element;
-                        el.data('errorEl') && el.data('errorEl').remove();
-                        el.data('errorEl', $($.validate.errorTemplate.replace(/\{msg\}/, this.message)));
-                        el.after(el.data('errorEl'));
-                        if (scrollTo !== false)
-                            $(window).scrollTop(el.offset().top);
-                    });
-            };
-    $(function(){
-        $('[data-validate] [data-rule]').blur(function(){
+        if (msg.isValidate)
+            $(this).data('errorEl') && $(this).data('errorEl').remove();
+        else
+            $(msg.messages).each(function () {
+                var el = this.element;
+                el.data('errorEl') && el.data('errorEl').remove();
+                el.data('errorEl', $($.validate.errorTemplate.replace(/\{msg\}/, this.message)));
+                el.after(el.data('errorEl'));
+                if (scrollTo !== false)
+                    $(window).scrollTop(el.offset().top);
+            });
+    };
+    $(function () {
+        $('[data-validate] [data-rule]').blur(function () {
             $(this).validate();
-         });
+        });
     });
 })();
