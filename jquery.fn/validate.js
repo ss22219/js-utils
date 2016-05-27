@@ -116,13 +116,13 @@ $.validate.validateHandler = function (msg, scrollTo) {
 
     //getArg('length','number;length(18)') -> 18 现在只支持一个参数
     function getArg(name, rule) {
-        var reg = new RegExp(name + '\\s{0,}\\(\\s{0,}(.+?)\\s{0,}\\)');
+        var reg = new RegExp(name + '\\s*\\(\\s*(.+?)\\s*\\)');
         return reg.test(rule) ? reg.exec(rule)[1] : null;
     }
 
     //getCustomMessage('length','number;length(18)[length must be 18]') -> length must be 18
     function getCustomMessage(name, rule) {
-        var reg = new RegExp(name + '(\\s{0,}\\(\\s{0,}.+?\\s{0,}\\))?\\[(.+?)\\]');
+        var reg = new RegExp(name + '(\\s*\\(\\s*.+?\\s*\\))?\\[(.+?)\\]');
         return reg.test(rule) ? reg.exec(rule)[2] : '';
     }
 
@@ -139,7 +139,7 @@ $.validate.validateHandler = function (msg, scrollTo) {
 
     //验证规则 number,required,datetime,mobile是正则规则 其他的是自定义action验证
     var rules = {
-        number: { rule: /^(-?\+?\d){0,}$/, message: '必须是一个整数' },
+        number: { rule: /^(-?\+?\d)*$/, message: '必须是一个整数' },
         required: { rule: /.+/, message: '不能为空' },
         datetime: { rule: /^(\d{4}\/\d{1,2}\/\d{1,2}\s+\d{1,2}:\d{1,2}:\d{1,2})?$/, message: '不是有效的日期格式' },
         mobile: { rule: /^(13[0-9]|14[0-9]|15[0-9]|18[0-9])\d{8}$/i, message: '不是有效的号码格式' },
