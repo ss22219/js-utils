@@ -6,7 +6,7 @@ HTML:
     <input type="password" id="target"/>
  </form>
 
- Script:
+Script:
 $('form').validate(justTest,scrollTo) -> 
     param: justTest bool 只是检查，不修改Dom
     param: scrollTo bool 滚动到错误元素
@@ -23,6 +23,9 @@ $.validate.rules.myActionRule = {
                 },
                 message: function(name,arg){
                 }}
+$.validate.errorTemplate = '<div class="error_msg">{msg}</div>';
+$.validate.validateHandler = function (msg, scrollTo) {
+}
 */
 "use strict";
 (function () {
