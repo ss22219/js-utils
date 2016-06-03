@@ -1,5 +1,5 @@
 "use strict";
-/*gool 2015.5.19*/
+/*gool 2016.6.3*/
 (function () {
     window.controls || (window.controls = {});
     var ready = false;
@@ -86,7 +86,8 @@
     //控件父类
     var controlBase = function (el) {
         this.$this = $(el);
-        this.init();
+        if (this.$this.length)
+            this.init();
     };
     controlBase.extend = function (proto) {
         var classe = function (el) {
@@ -115,6 +116,10 @@
                     case 'checkbox':
                         this.setValueHandler = this.setRadioCheckBoxValue;
                         this.getValueHandler = this.getRadioCheckBoxValue;
+                        break;
+                    default:
+                        this.setValueHandler = this.setTextValue;
+                        this.getValueHandler = this.getTextValue;
                 }
             else if (tag == 'select') {
                 this.setValueHandler = this.setSelectValue;
@@ -127,6 +132,12 @@
         setValue: function (val) {
             this.setValueHandler(val);
             this.$this.change();
+        },
+        getTextValue: function(){
+            return this.$this.val();
+        },
+        setTextValue: function (val) {
+            this.$this.val(val);
         },
         setRadioCheckBoxValue: function (val) {
             var valArr = typeof val == 'string' ? val.split(',') : [val];
