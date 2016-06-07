@@ -18,6 +18,7 @@
             }
         });
     });
+    
     $.fn.controlJson = function (data) {
         if (data === void 0) {
             data = {};
@@ -30,6 +31,16 @@
             for (var k in data)
                 $('[data-field=' + k + ']', this).value(data[k]);
     };
+    
+    $.fn.appendControlJson = function (data) {
+        if (data === void 0) 
+            data = {};
+        $(this.controlJson()).each(function (i) {
+                data[i] = this;
+        });
+        return data;
+    };
+    
     //扩展jQuery 添加value方法
     $.fn.value = function (value) {
         var $this = $(this), control = this.data("control");
@@ -50,37 +61,6 @@
     $.control = $.fn.control = function () {
         return $(this).data("control");
     }
-
-    var modelData;
-    $.control.modelData = modelData;
-
-    //为控件绑定数据
-    window.dataBind = function (model) {
-        var handler = function () {
-            for (var k in model) {
-                var v = model[k];
-                $('[data-field=' + k + ']').value(v);
-            }
-            modelData = model;
-        }
-        if (ready)
-            handler();
-        else
-            $(function () {
-                handler();
-            });
-    };
-
-    //获取当前model数据
-    window.getData = function () {
-        var data = typeof modelData == 'undefined' ? modelData = {} : modelData;
-        $('[data-field]').each(function () {
-            var $this = $(this);
-            data[$this.attr('data-field')] = $this.value();
-        });
-        return data;
-    }
-
     window.controls || (window.controls = {});
 
     //控件父类
