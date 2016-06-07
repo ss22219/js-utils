@@ -35,9 +35,11 @@
     $.fn.appendControlJson = function (data) {
         if (data === void 0) 
             data = {};
-        $(this.controlJson()).each(function (i) {
-                data[i] = this;
-        });
+        var cdata = this.controlJson();
+        for(var k in cdata){
+            if(cdata.hasOwnProperty(k))
+                data[k] = cdata[k];
+        }
         return data;
     };
     
