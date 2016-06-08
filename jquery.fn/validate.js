@@ -186,7 +186,7 @@ $.validate.rules.myActionRule = {
         },gt: {
             action: function (el, rule, val, target) {
                 return parseFloat(val) > parseFloat($('#'+target+',[data-field='+target+']').value());
-            }, message: function () {
+            }, message: function (name, target) {
                 var targetName = getName($('#'+ target+',[data-field='+target+']').attr('data-rule'));
                 targetName = targetName ? targetName : '上一个';
                 return '必须大于' + targetName;
@@ -194,7 +194,7 @@ $.validate.rules.myActionRule = {
         },lt: {
             action: function (el, rule, val, target) {
                 return parseFloat(val) < parseFloat($('#'+target+',[data-field='+target+']').value());
-            }, message: function (name,arg) {
+            }, message: function (name, target) {
                 var targetName = getName($('#'+ target +',[data-field='+target+']').attr('data-rule'));
                 targetName = targetName ? targetName : '上一个';
                 return '必须小于' + targetName;
