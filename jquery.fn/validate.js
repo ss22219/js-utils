@@ -61,14 +61,12 @@ $.validate.rules.myActionRule = {
         $(this).each(function () {
             var $this = $(this);
             //获取到控件值,$this.val()需要其他组件
-            var val = $this.value && $this.value() || $this.val(),
+            var val = $this.value && $this.value() || $this.val(),//value()  是control.js
                 rule = $this.attr('data-rule'), //data-rule内容
-                match = /^([^;:]+?):/.exec(rule),
-                displayName = match ? match[1] : '',
+                displayName = getName(rule), //自定义名称
                 rs = getRules(rule); //解析成rule列表
             for (var k in rs) {
                 var i = rs[k], arg = getArg(i, rule);
-
                 //对当前规则判断,如果包含正则表达式属性,使用正则验证,否则使用自定义action验证
                 if (rules[i] &&
                     (rules[i].rule ? !rules[i].rule.test(val) : true) //正则验证
@@ -97,6 +95,13 @@ $.validate.rules.myActionRule = {
             validateHandler.call(this, rtv, scrollTo);
         return rtv;
     }
+    
+    //getName('name:rules..') -> name
+    function getName(rule){
+        var match = /^([^;:]+?):/.exec(rule),
+        return match ? match[1] : '',
+    }
+    
     //解析data-rule信息
     function getRules(rule) {
         if (!rule)
@@ -178,6 +183,22 @@ $.validate.rules.myActionRule = {
                     return true;
                 return val.length >= parseFloat(arg);
             }, message: '长度不能小于{arg}'
+        },gt: {
+            action: function (el, rule, val, target) {
+                return parseFloat(val) > parseFloat($('#'+target+',[data-field='+target+']').value());
+            }, message: function () {
+                var targetName = getName($('#'+ target+',[data-field='+target+']').attr('data-rule'));
+                targetName = targetName ? targetName : '上一个';
+                return '必须大于' + targetName;
+            }
+        },lt: {
+            action: function (el, rule, val, target) {
+                return parseFloat(val) < parseFloat($('#'+target+',[data-field='+target+']').value());
+            }, message: function (name,arg) {
+                var targetName = getName($('#'+ target +',[data-field='+target+']').attr('data-rule'));
+                targetName = targetName ? targetName : '上一个';
+                return '必须小于' + targetName;
+            }
         }
     };
     $.fn.validate.rules = rules;
