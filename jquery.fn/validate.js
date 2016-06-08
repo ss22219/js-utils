@@ -98,8 +98,8 @@ $.validate.rules.myActionRule = {
     
     //getName('name:rules..') -> name
     function getName(rule){
-        var match = /^([^;:]+?):/.exec(rule),
-        return match ? match[1] : '',
+        var match = /^([^;:]+?):/.exec(rule);
+        return match ? match[1] : '';
     }
     
     //解析data-rule信息
