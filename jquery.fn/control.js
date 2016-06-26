@@ -3,14 +3,20 @@
 (function () {
     window.controls || (window.controls = {});
     var ready = false;
-
+    
+    //初始化
     $(function () {
         ready = true;
         $('[data-field],[data-control]').each(function () {
             var $this = $(this);
-            var controlType = $this.attr('data-control'), initEvent = $this.attr('data-init'), setEvent = $this.attr('data-set');
+            var controlType = $this.attr('data-control'),
+            initEvent = $this.attr('data-init'),
+            setEvent = $this.attr('data-set');
+            
             if (controlType && controls[controlType]) {
-                $this.data('control', new controls[controlType](this));
+                //初始化控件
+                if (!$this.data('control'))
+                    $this.data('control', new controls[controlType](this));
                 if (initEvent && typeof window[initEvent] == 'function')
                     window[initEvent].call(this, this);
                 if (setEvent && typeof window[setEvent] == 'function')
@@ -19,27 +25,25 @@
         });
     });
     
+    //获取或设置控件列表的值
     $.fn.controlJson = function (data) {
-        var handler = function () {
-            if (data === void 0) {
-                data = {};
-                $('[data-field]', this).each(function () {
-                    var $this = $(this);
-                    data[$this.attr('data-field')] = $this.value();
-                });
-                return data;
-            } else
+        if (!arguments.length) {
+            data = {};
+            $('[data-field]', this).each(function () {
+                var $this = $(this);
+                data[$this.attr('data-field')] = $this.value();
+            });
+            return data;
+        } else { //等页面dom完成后再赋值
+            $(function () {
                 for (var k in data)
                     $('[data-field=' + k + ']', this).value(data[k]);
-        }
-        if (ready)
-            handler();
-        else
-            $(function () {
-                handler();
             });
+        }
+
     };
     
+    //合并data与控件列表的值
     $.fn.appendControlJson = function (data) {
         if (data === void 0) 
             data = {};
@@ -51,13 +55,17 @@
         return data;
     };
     
-    //扩展jQuery 添加value方法
+    //扩展jQuery 添加value方法 该方法调用具体的控件getValue，setValue方法
     $.fn.value = function (value) {
         var $this = $(this), control = this.data("control");
+
+        //如果不存在的控件，使用nativeControl，nativeControl是原生html控件的处理类
         if (!control) {
             control = new nativeControl(this);
             this.data("control", control);
         }
+
+        //没有参数就是获取值
         if (!arguments.length)
             return control.value ? control.value() : control.getValue();
         else {
