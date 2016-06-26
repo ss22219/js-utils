@@ -20,16 +20,24 @@
     });
     
     $.fn.controlJson = function (data) {
-        if (data === void 0) {
-            data = {};
-            $('[data-field]', this).each(function () {
-                var $this = $(this);
-                data[$this.attr('data-field')] = $this.value();
+        var handler = function () {
+            if (data === void 0) {
+                data = {};
+                $('[data-field]', this).each(function () {
+                    var $this = $(this);
+                    data[$this.attr('data-field')] = $this.value();
+                });
+                return data;
+            } else
+                for (var k in data)
+                    $('[data-field=' + k + ']', this).value(data[k]);
+        }
+        if (ready)
+            handler();
+        else
+            $(function () {
+                handler();
             });
-            return data;
-        } else
-            for (var k in data)
-                $('[data-field=' + k + ']', this).value(data[k]);
     };
     
     $.fn.appendControlJson = function (data) {
