@@ -1,30 +1,15 @@
 "use strict";
-/*gool 2016.6.3*/
+/*gool 2016.7.5*/
 (function () {
     window.controls || (window.controls = {});
-    var ready = false;
-    
+
     //初始化
     $(function () {
-        ready = true;
         $('[data-field],[data-control]').each(function () {
-            var $this = $(this);
-            var controlType = $this.attr('data-control'),
-            initEvent = $this.attr('data-init'),
-            setEvent = $this.attr('data-set');
-            
-            if (controlType && controls[controlType]) {
-                //初始化控件
-                if (!$this.data('control'))
-                    $this.data('control', new controls[controlType](this));
-                if (initEvent && typeof window[initEvent] == 'function')
-                    window[initEvent].call(this, this);
-                if (setEvent && typeof window[setEvent] == 'function')
-                    $this.data('setEvent', window[setEvent]);
-            }
+            $(this).control()
         });
     });
-    
+
     //获取或设置控件列表的值
     $.fn.controlJson = function (data) {
         if (!arguments.length) {
@@ -42,44 +27,45 @@
         }
 
     };
-    
+
     //合并data与控件列表的值
     $.fn.appendControlJson = function (data) {
-        if (data === void 0) 
+        if (!arguments.length)
             data = {};
         var cdata = this.controlJson();
-        for(var k in cdata){
-            if(cdata.hasOwnProperty(k))
+        for (var k in cdata) {
+            if (cdata.hasOwnProperty(k))
                 data[k] = cdata[k];
         }
         return data;
     };
-    
+
     //扩展jQuery 添加value方法 该方法调用具体的控件getValue，setValue方法
     $.fn.value = function (value) {
-        var $this = $(this), control = this.data("control");
-
-        //如果不存在的控件，使用nativeControl，nativeControl是原生html控件的处理类
-        if (!control) {
-            control = new nativeControl(this);
-            this.data("control", control);
-        }
+        var $this = $(this), control = $this.control();
 
         //没有参数就是获取值
         if (!arguments.length)
             return control.value ? control.value() : control.getValue();
-        else {
+        else
             control.value ? control.value(value) : control.setValue(value);
-            if ($this.data('setEvent'))
-                $this.data('setEvent').call(this, value);
-        }
+
     }
 
     //扩展jQuery 添加control方法
     $.control = $.fn.control = function () {
-        return $(this).data("control");
+        var $this = $(this), control = $this.data("controlCache");
+        if (!control) {
+            var controlType = $this.attr('data-control');
+            //初始化控件
+            if (controlType && controls[controlType])
+                control = new controls[controlType](this);
+            else
+                control = new nativeControl(this);
+            $this.data('controlCache', control);
+        }
+        return control;
     }
-    window.controls || (window.controls = {});
 
     //控件父类
     var controlBase = function (el) {
@@ -103,7 +89,7 @@
     }
     controls.controlBase = controlBase;
 
-    ///原生控件处理
+    ///原生控件处理 input,select标签
     var nativeControl = controlBase.extend({
         init: function () {
             var tag = this.$this.get(0).tagName.toLowerCase();
@@ -131,7 +117,7 @@
             this.setValueHandler(val);
             this.$this.change();
         },
-        getTextValue: function(){
+        getTextValue: function () {
             return this.$this.val();
         },
         setTextValue: function (val) {
