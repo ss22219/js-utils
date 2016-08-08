@@ -145,7 +145,7 @@ $.validate.rules.myActionRule = {
         number: { rule: /^(-?\+?\d){0,}$/, message: '必须是一个整数' },
         required: { rule: /.+/, message: '不能为空' },
         datetime: { rule: /^(\d{4}\/\d{1,2}\/\d{1,2}\s+\d{1,2}:\d{1,2}:\d{1,2})?$/, message: '不是有效的日期格式' },
-        mobile: { rule: /^(13[0-9]|14[0-9]|15[0-9]|18[0-9])\d{8}$/i, message: '不是有效的号码格式' },
+        mobile: { rule: /^\d{11}$/i, message: '不是有效的号码格式' },
         length: {
             action: function (el, rule, val, arg) {
                 if (val === null || val === void 0)
