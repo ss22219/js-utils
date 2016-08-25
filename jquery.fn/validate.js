@@ -43,6 +43,14 @@ $.validate.rules.myActionRule = {
     //scrollTo 是否滚动到错误处,默认 是
     //validateHandler 错误处理函数, justTest=true 有默认值
     $.fn.validate = function (justTest, scrollTo, validateHandler) {
+        if (!arguments.length)
+            justTest = $.fn.validate.defaultConfig;
+
+        if (arguments.length == 1 && typeof justTest == "object") {
+            scrollTo = justTest.scrollTo;
+            validateHandler = justTest.scrollTo;
+            justTest = justTest.justTest;
+        }
         if (this == window) {
             //为所有验证控件验证
             return $('[data-rule]').validate(justTest, scrollTo, validateHandler);
@@ -72,8 +80,7 @@ $.validate.rules.myActionRule = {
                     (rules[i].rule ? !rules[i].rule.test(val) : true) //正则验证
                     &&
                     (rules[i].action ? !rules[i].action($this, rule, val, arg) : true) //自定义action验证
-                    )
-                {
+                    ) {
                     rtv.isValidate = false;
                     var msg = getCustomMessage(i, rule);
                     if (!msg)
@@ -95,13 +102,13 @@ $.validate.rules.myActionRule = {
             validateHandler.call(this, rtv, scrollTo);
         return rtv;
     }
-    
+
     //getName('name:rules..') -> name
-    function getName(rule){
+    function getName(rule) {
         var match = /^([^;:]+?):/.exec(rule);
         return match ? match[1] : '';
     }
-    
+
     //解析data-rule信息
     function getRules(rule) {
         if (!rule)
@@ -183,19 +190,19 @@ $.validate.rules.myActionRule = {
                     return true;
                 return val.length >= parseFloat(arg);
             }, message: '长度不能小于{arg}'
-        },gt: {
+        }, gt: {
             action: function (el, rule, val, target) {
-                return parseFloat(val) > parseFloat($('#'+target+',[data-field='+target+']').value());
+                return parseFloat(val) > parseFloat($('#' + target + ',[data-field=' + target + ']').value());
             }, message: function (name, target) {
-                var targetName = getName($('#'+ target+',[data-field='+target+']').attr('data-rule'));
+                var targetName = getName($('#' + target + ',[data-field=' + target + ']').attr('data-rule'));
                 targetName = targetName ? targetName : '上一个';
                 return '必须大于' + targetName;
             }
-        },lt: {
+        }, lt: {
             action: function (el, rule, val, target) {
-                return parseFloat(val) < parseFloat($('#'+target+',[data-field='+target+']').value());
+                return parseFloat(val) < parseFloat($('#' + target + ',[data-field=' + target + ']').value());
             }, message: function (name, target) {
-                var targetName = getName($('#'+ target +',[data-field='+target+']').attr('data-rule'));
+                var targetName = getName($('#' + target + ',[data-field=' + target + ']').attr('data-rule'));
                 targetName = targetName ? targetName : '上一个';
                 return '必须小于' + targetName;
             }
@@ -203,7 +210,18 @@ $.validate.rules.myActionRule = {
     };
     $.fn.validate.rules = rules;
     $.validate = $.fn.validate;
+
+    //默认的错误提示元素
     $.validate.errorTemplate = '<div class="error_msg">{msg}</div>';
+
+    //默认的验证配置
+    $.validate.defaultConfig = {
+        justTest: false,
+        scrollTo: true,
+        validateHandler: null
+    };
+
+    //默认的验证处理
     $.validate.validateHandler = function (msg, scrollTo) {
         if (msg.isValidate)
             $(this).data('errorEl') && $(this).data('errorEl').remove();
@@ -217,9 +235,16 @@ $.validate.rules.myActionRule = {
                     $(window).scrollTop(el.offset().top);
             });
     };
+
+    //为带有data-validate的容器自动验证
     $(function () {
-        $('[data-validate] [data-rule]').blur(function () {
-            $(this).validate();
+        $('[data-validate]').each(function () {
+            $(this).find('[data-rule]').blur(function () {
+                $(this).validate();
+            });
+            $(this).submit(function () {
+                return $(this).validate().isValidate;
+            });
         });
     });
 })();
