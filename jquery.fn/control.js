@@ -12,6 +12,7 @@
 
     //获取或设置控件列表的值
     $.fn.controlJson = function (data) {
+        var _this = this
         if (!arguments.length) {
             data = {};
             $('[data-field]', this).each(function () {
@@ -22,7 +23,7 @@
         } else { //等页面dom完成后再赋值
             $(function () {
                 for (var k in data)
-                    $('[data-field=' + k + ']', this).value(data[k]);
+                    $('[data-field=' + k + ']', _this).value(data[k]);
             });
         }
 
