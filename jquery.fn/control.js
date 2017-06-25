@@ -161,10 +161,14 @@
             var name = this.$this.attr('name'), radios = $(':' + this.type + '[name=' + name + ']'), val = '';
             if (radios.length <= 1)
                 return this.$this[0].checked;
+            var values = {};
             $(radios).each(function () {
                 if (this.checked)
-                    val += this.value + ',';
+                    values[this.value] = this.value;
             });
+            for (var k in values) 
+                val += k + ','
+            
             return val.replace(/,$/, '');
         },
         setSelectValue: function (val) {
