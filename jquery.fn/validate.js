@@ -57,7 +57,7 @@ $.validate.rules.myActionRule = {
         } else if (!this.attr('data-rule') && $('[data-rule]', this).length > 0) {
             //如果当前元素是验证控件,为当前验证控件验证
             return $('[data-rule]', this).validate(justTest, scrollTo, validateHandler);
-        } else if (this.validate && this.length == 0) {
+        } else if (this.validate && this.length == 0 && $('[data-rule]').length > 0) {
             //如果当前元素下面包含验证控件,验证当前元素下所有控件
             return $('[data-rule]').validate(justTest, scrollTo, validateHandler);
         }
