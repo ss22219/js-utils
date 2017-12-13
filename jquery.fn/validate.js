@@ -1,4 +1,4 @@
-/*
+/* https://github.com/ss22219/js-utils
 HTML:
  <form data-validate>
     Enter:
