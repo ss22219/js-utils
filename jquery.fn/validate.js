@@ -73,6 +73,7 @@ $.validate.rules.myActionRule = {
                 rule = $this.attr('data-rule'), //data-rule内容
                 displayName = getName(rule), //自定义名称
                 rs = getRules(rule); //解析成rule列表
+            var result = { element: $this, message: null, isValidate: true }
             for (var k in rs) {
                 var i = rs[k], arg = getArg(i, rule);
                 //对当前规则判断,如果包含正则表达式属性,使用正则验证,否则使用自定义action验证
@@ -87,9 +88,12 @@ $.validate.rules.myActionRule = {
                         msg = typeof rules[i].message == 'string' ? formatMsg(rules[i].message, displayName, arg) : rules[i].message(displayName, arg)
                     else
                         msg = formatMsg(msg, displayName, arg)
-                    rtv.messages.push({ element: $this, message: msg }); //设置验证失败信息
+                    //设置验证失败信息
+                    result.message = msg
+                    result.isValidate = false
                 }
             }
+            rtv.messages.push(result);
         });
 
 
@@ -229,6 +233,8 @@ $.validate.rules.myActionRule = {
             $(msg.messages).each(function () {
                 var el = this.element;
                 el.data('errorEl') && el.data('errorEl').remove();
+                if (this.isValidate)
+                    return
                 el.data('errorEl', $($.validate.errorTemplate.replace(/\{msg\}/, this.message)));
                 el.after(el.data('errorEl'));
                 if (scrollTo !== false)
