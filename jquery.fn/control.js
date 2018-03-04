@@ -1,5 +1,5 @@
 "use strict";
-/*gool 2016.7.5*/
+/*gool 2017.11.4*/
 (function () {
     window.controls || (window.controls = {});
 
@@ -10,21 +10,47 @@
         });
     });
 
+
+    //处理控件嵌套控件的情况
+    function getControls(el) {
+        el = $(el)
+        var result = []
+        var controls = el.find('[data-control]')
+        var fields = el.find('[data-field]')
+        fields.each(function () {
+            var field = this, find = false
+            controls.each(function () {
+                if ($(this).find(field).length) {
+                    find = true
+                    return false
+                }
+            })
+            if (!find)
+                result.push(field)
+        })
+        return $(result)
+    }
+
     //获取或设置控件列表的值
     $.fn.controlJson = function (data) {
         var _this = this
         if (!arguments.length) {
             data = {};
-            $('[data-field]', this).each(function () {
+            getControls(this).each(function () {
                 var $this = $(this);
                 data[$this.attr('data-field')] = $this.value();
             });
             return data;
         } else { //等页面dom完成后再赋值
-            $(function () {
-                for (var k in data)
-                    $('[data-field=' + k + ']', _this).value(data[k]);
-            });
+            var el = this, setVal = function() {
+                getControls(el).each(function () {
+                    var field = $(this).attr('data-field')
+                    for (var k in data)
+                        if (field == k)
+                            $(this).value(data[k]);
+                })
+            }
+            $.isReady ? setVal() : $(setVal)
         }
 
     };
@@ -70,7 +96,7 @@
 
     //控件父类
     var controlBase = function (el) {
-        this.$this = $(el);
+        this.$el = this.$this = $(el);
         if (this.$this.length)
             this.init();
     };
@@ -109,6 +135,8 @@
             else if (tag == 'select') {
                 this.setValueHandler = this.setSelectValue;
                 this.getValueHandler = this.getSelectValue;
+            } else {
+
             }
         },
         getValue: function () {
@@ -166,9 +194,9 @@
                 if (this.checked)
                     values[this.value] = this.value;
             });
-            for (var k in values) 
+            for (var k in values)
                 val += k + ','
-            
+
             return val.replace(/,$/, '');
         },
         setSelectValue: function (val) {
@@ -186,8 +214,12 @@
         getSelectValue: function () {
             return this.$this.val();
         },
-        getValueHandler: $.noop,
-        setValueHandler: $.noop
+        getValueHandler: function () {
+            return this.$this.val()
+        },
+        setValueHandler: function (val) {
+            this.$this.val(val)
+        }
     });
     controls.nativeControl = nativeControl;
 })()
