@@ -103,7 +103,7 @@ validate.js会在验证控件之后加入一个标签`<div class="error_msg"></d
 ```js
 $.validate.errorTemplate = '<div class="error_msg">{msg}</div>'
 ```
-## 自定义验证结果处理函数
+## 自定义结果函数
 添加错误提示HTML的操作由`validateHandler`实现，validate.js内置了一个简单的验证后操作处理函数
 
 用户可以使用`window.validateHandler = function(msg, scrollTo)`来自己的验证后处理函数(添加提示标签，滚动到错误控件处)
