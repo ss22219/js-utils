@@ -15,15 +15,9 @@ https://github.com/ss22219/js-utils/blob/master/jquery.fn/validate.js
 <input type="txt" data-rule="required;number;minLength(10)"/>
 ```
 `data-rule`的语法格式是：
->```name:rule(arg)[msg];```
+>```提示名称: 规则(规则参数) [自定义提示];```
 
-`name`自定义名称 
-`rule`验证规则名 
-`arg`规则参数 
-`msg`自定义提示
-
-其中 `name`与`msg`都是可选项，某些规则需要传入一个参数
-
+其中 `提示名称`与`自定义提示`都是可选项，某些规则需要传入一个参数
 自定义提示中可以使用`{name}`与`{arg}`变量，这在自定义规则中很有用
 
 ## jQuery验证插件
