@@ -12,7 +12,7 @@ https://github.com/ss22219/js-utils/blob/master/jquery.fn/validate.js
 ## 添加验证
 在需要验证的控件添加`data-rule`属性，并填验证规则
 ```html
-<input type="txt" data-rule="required;number;minLength(10)"/>
+<input type="text" data-rule="required;number;minLength(10)"/>
 ```
 `data-rule`的语法格式是：
 >```提示名称: 规则(规则参数) [自定义提示];```
